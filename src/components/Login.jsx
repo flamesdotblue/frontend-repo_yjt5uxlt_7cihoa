@@ -1,46 +1,79 @@
 import React, { useState } from 'react';
 
-export default function Login({ onLogin }) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("conductor");
-  const [error, setError] = useState("");
+const ROLES = [
+  { key: 'admin', label: 'Admin', user: 'admin', pass: 'admin123' },
+  { key: 'conductor', label: 'Conductor', user: 'user', pass: 'user123' },
+];
 
-  const handleSubmit = (e) => {
+export default function Login({ onLogin }) {
+  const [role, setRole] = useState('admin');
+  const [username, setUsername] = useState('admin');
+  const [password, setPassword] = useState('admin123');
+  const [error, setError] = useState('');
+
+  const submit = (e) => {
     e.preventDefault();
-    // Simple demo credentials
-    // Admin can add children; conductor scans and marks rides
-    if (role === "admin" && username === "admin" && password === "admin123") {
-      onLogin({ username, role });
-    } else if (role === "conductor" && username === "user" && password === "user123") {
-      onLogin({ username, role });
+    const rule = ROLES.find((r) => r.key === role);
+    if (rule && username === rule.user && password === rule.pass) {
+      onLogin({ role, username });
     } else {
-      setError("Invalid credentials. Try admin/admin123 or user/user123.");
+      setError('Invalid credentials for selected role');
     }
   };
 
+  const handleRole = (r) => {
+    setRole(r.key);
+    setUsername(r.user);
+    setPassword(r.pass);
+    setError('');
+  };
+
   return (
-    <div className="min-h-[60vh] flex items-center justify-center">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white border rounded-lg p-6 shadow-sm space-y-4">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold">Sign in</h2>
-          <p className="text-sm text-gray-500">Choose role and enter credentials</p>
+    <div className="min-h-[60vh] grid place-items-center px-4">
+      <div className="w-full max-w-md bg-white/70 backdrop-blur rounded-xl border p-6">
+        <h2 className="text-xl font-semibold mb-4">Sign in</h2>
+        <div className="flex gap-2 mb-4">
+          {ROLES.map((r) => (
+            <button
+              key={r.key}
+              onClick={() => handleRole(r)}
+              className={`flex-1 rounded-md border px-3 py-2 text-sm ${
+                role === r.key ? 'bg-emerald-600 text-white border-emerald-600' : 'hover:bg-gray-50'
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <button type="button" onClick={() => setRole("conductor")} className={`py-2 rounded border text-sm ${role === "conductor" ? "bg-blue-600 text-white border-blue-600" : "bg-white"}`}>Conductor</button>
-          <button type="button" onClick={() => setRole("admin")} className={`py-2 rounded border text-sm ${role === "admin" ? "bg-blue-600 text-white border-blue-600" : "bg-white"}`}>Admin</button>
-        </div>
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">Username</label>
-          <input value={username} onChange={(e)=>setUsername(e.target.value)} className="w-full border rounded px-3 py-2" placeholder="admin or user" />
-        </div>
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">Password</label>
-          <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} className="w-full border rounded px-3 py-2" placeholder="••••••••" />
-        </div>
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
-        <button type="submit" className="w-full py-2 rounded bg-gray-900 text-white hover:bg-gray-800">Sign in</button>
-      </form>
+        <form onSubmit={submit} className="space-y-3">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Username</label>
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full rounded-md border px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="Enter username"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-md border px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="Enter password"
+            />
+          </div>
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <button
+            type="submit"
+            className="w-full rounded-md bg-emerald-600 text-white py-2 hover:bg-emerald-700"
+          >
+            Continue
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

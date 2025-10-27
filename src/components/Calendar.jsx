@@ -1,54 +1,69 @@
 import React from 'react';
 
 function getMonthMatrix(date) {
-  const d = new Date(date.getFullYear(), date.getMonth(), 1);
-  const startDay = d.getDay(); // 0-6
-  const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  const weeks = [];
-  let current = 1 - startDay;
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const startDay = new Date(firstDay);
+  startDay.setDate(firstDay.getDate() - ((firstDay.getDay() + 6) % 7)); // Monday first
+  const matrix = [];
   for (let w = 0; w < 6; w++) {
     const week = [];
-    for (let i = 0; i < 7; i++) {
-      const dayDate = new Date(date.getFullYear(), date.getMonth(), current);
-      week.push({
-        inMonth: current >= 1 && current <= daysInMonth,
-        date: dayDate,
-        day: dayDate.getDate(),
-      });
-      current++;
+    for (let d = 0; d < 7; d++) {
+      const day = new Date(startDay);
+      day.setDate(startDay.getDate() + w * 7 + d);
+      week.push(day);
     }
-    weeks.push(week);
+    matrix.push(week);
   }
-  return weeks;
+  return matrix;
 }
 
-export default function Calendar({ visits = {}, monthDate = new Date() }) {
-  const weeks = getMonthMatrix(monthDate);
-  const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth()+1).padStart(2,'0')}`;
+function fmtKey(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 
-  const getVisitCount = (d) => {
-    const key = `${monthKey}-${String(d).padStart(2,'0')}`;
-    return visits[key] || 0;
-  };
+export default function Calendar({ visits = {}, currentDate = new Date() }) {
+  const matrix = getMonthMatrix(currentDate);
+  const monthName = currentDate.toLocaleString('default', { month: 'long' });
+  const year = currentDate.getFullYear();
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <h4 className="font-medium">{monthDate.toLocaleString(undefined, { month: 'long', year: 'numeric' })}</h4>
-        <span className="text-xs text-gray-500">Yellow = 1st trip, Orange = 2nd trip</span>
+    <div className="w-full">
+      <div className="flex items-baseline justify-between mb-2">
+        <h4 className="font-medium">{monthName} {year}</h4>
+        <div className="flex items-center gap-3 text-xs text-gray-500">
+          <div className="flex items-center gap-1">
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-yellow-400 border" /> First trip
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-orange-500 border" /> Second trip
+          </div>
+        </div>
       </div>
-      <div className="grid grid-cols-7 text-xs font-medium text-gray-500 mb-1">
-        {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=> <div key={d} className="p-2 text-center">{d}</div>)}
-      </div>
-      <div className="grid grid-cols-7 gap-1">
-        {weeks.flat().map((cell, idx) => {
-          const count = cell.inMonth ? getVisitCount(cell.day) : 0;
-          let bg = "";
-          if (cell.inMonth && count === 1) bg = "bg-yellow-200";
-          if (cell.inMonth && count >= 2) bg = "bg-orange-300";
+      <div className="grid grid-cols-7 gap-1 text-xs">
+        {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map((d) => (
+          <div key={d} className="text-center text-gray-500 py-1">{d}</div>
+        ))}
+        {matrix.flat().map((day, idx) => {
+          const inMonth = day.getMonth() === currentDate.getMonth();
+          const key = fmtKey(day);
+          const count = visits[key] || 0;
           return (
-            <div key={idx} className={`h-10 border rounded flex items-center justify-center ${cell.inMonth ? bg : 'bg-gray-50 text-gray-400'}`}>
-              <span className="text-sm">{cell.day}</span>
+            <div
+              key={idx}
+              className={`h-16 rounded-md border p-1 ${inMonth ? 'bg-white' : 'bg-gray-50 text-gray-400'}`}
+            >
+              <div className="flex items-start justify-between">
+                <span className="text-[11px] text-gray-500">{day.getDate()}</span>
+                <div className="flex gap-1">
+                  <span className={`h-3 w-3 rounded-full border ${count >= 1 ? 'bg-yellow-400' : 'bg-transparent'}`} />
+                  <span className={`h-3 w-3 rounded-full border ${count >= 2 ? 'bg-orange-500' : 'bg-transparent'}`} />
+                </div>
+              </div>
             </div>
           );
         })}

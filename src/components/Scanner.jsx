@@ -1,41 +1,27 @@
-import React, { useMemo, useState } from 'react';
+import React from 'react';
+import { ScanLine } from 'lucide-react';
 
-export default function Scanner({ onScan }) {
-  const [input, setInput] = useState("");
-  const [hint, setHint] = useState("");
-
-  const example = useMemo(() => {
-    return "CHILD-001";
-  }, []);
-
-  const handleScan = () => {
-    const trimmed = input.trim();
-    if (!trimmed) {
-      setHint("Enter or paste a QR code value (e.g., " + example + ")");
-      return;
-    }
-    onScan(trimmed);
-    setInput("");
-    setHint("");
-  };
-
+export default function Scanner({ scannedId, setScannedId }) {
   return (
-    <div className="bg-white border rounded-lg p-4 shadow-sm">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-medium">Scan QR</h3>
-        <span className="text-xs text-gray-500">Paste or type the code</span>
-      </div>
-      <div className="flex gap-2">
+    <div className="max-w-5xl mx-auto px-4 mt-6">
+      <div className="rounded-xl border bg-white/70 backdrop-blur p-4 flex flex-col md:flex-row md:items-center gap-3">
+        <div className="flex items-center gap-2 text-gray-700">
+          <ScanLine className="h-5 w-5" />
+          <span className="text-sm font-medium">QR Scan (type or paste ID)</span>
+        </div>
         <input
-          value={input}
-          onChange={(e)=>setInput(e.target.value)}
-          className="flex-1 border rounded px-3 py-2"
-          placeholder={`e.g., ${example}`}
-          onKeyDown={(e)=>{ if(e.key==='Enter'){ handleScan(); } }}
+          value={scannedId}
+          onChange={(e) => setScannedId(e.target.value)}
+          placeholder="e.g., CHILD-001"
+          className="flex-1 rounded-md border px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
         />
-        <button onClick={handleScan} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Scan</button>
+        <button
+          onClick={() => setScannedId('')}
+          className="rounded-md border px-3 py-2 text-sm hover:bg-gray-50"
+        >
+          Clear
+        </button>
       </div>
-      {hint ? <p className="text-xs text-gray-500 mt-2">{hint}</p> : null}
     </div>
   );
 }
